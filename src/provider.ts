@@ -129,17 +129,4 @@ export async function startProvider(): Promise<void> {
   stream.on(EventType.NegotiationRejected, (event) => {
     console.log(`🚫 Negotiation ${event.negotiation_id} rejected: ${event.reason || "no reason"}`);
   });
-
-  // ── Graceful shutdown ──────────────────────────────────────────────────
-
-  process.on("SIGINT", () => {
-    console.log("\n🛑 Shutting down ChainGuard provider…");
-    stream.close();
-    process.exit(0);
-  });
-
-  process.on("SIGTERM", () => {
-    stream.close();
-    process.exit(0);
-  });
 }
