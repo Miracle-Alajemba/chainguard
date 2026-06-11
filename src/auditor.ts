@@ -1,5 +1,6 @@
 import Anthropic from "@anthropic-ai/sdk";
 import * as dotenv from "dotenv";
+import { analyzeSolidityCode } from "./analyzer";
 dotenv.config();
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -28,7 +29,7 @@ export interface AuditReport {
 
 const SYSTEM_PROMPT = `You are an elite smart contract security auditor with deep expertise in Solidity, the EVM, and common vulnerability patterns (reentrancy, access control flaws, integer overflow/underflow, front-running, flash-loan attacks, oracle manipulation, etc.).
 
-Your job is to analyse the provided smart contract source code and produce a comprehensive security audit report.
+Your job is to analyse the provided smart contract source code and produce a comprehensive security audit report. You should also verify the local static analysis warnings provided in the prompt, filter out any false positives, and incorporate valid findings into the report.
 
 You MUST respond with **only** valid JSON — no markdown fences, no commentary, no extra text. The JSON schema is:
 
@@ -59,8 +60,12 @@ Scoring guidelines:
 - 25–49  = High risk — significant vulnerabilities present
 - 0–24   = Critical — contract is dangerous to deploy`;
 
-function buildUserPrompt(sourceCode: string): string {
-  return `Audit the following smart contract source code and return the JSON report.\n\n--- BEGIN CONTRACT SOURCE ---\n${sourceCode}\n--- END CONTRACT SOURCE ---`;
+function buildUserPrompt(sourceCode: string, warnings: string[]): string {
+  let warningSection = "";
+  if (warnings.length > 0) {
+    warningSection = `Local static analysis has flagged the following warnings:\n${warnings.map((w) => `- ${w}`).join("\n")}\n\n`;
+  }
+  return `Audit the following smart contract source code and return the JSON report.\n\n${warningSection}--- BEGIN CONTRACT SOURCE ---\n${sourceCode}\n--- END CONTRACT SOURCE ---`;
 }
 
 // ── Auditor ──────────────────────────────────────────────────────────────────
@@ -83,6 +88,8 @@ async function callWithRetry<T>(fn: () => Promise<T>, retries = 3, delay = 1000)
 }
 
 export async function auditContract(sourceCode: string): Promise<AuditReport> {
+  const warnings = analyzeSolidityCode(sourceCode);
+
   const message = await callWithRetry(() =>
     anthropic.messages.create({
       model: "claude-sonnet-4-5",
@@ -91,7 +98,7 @@ export async function auditContract(sourceCode: string): Promise<AuditReport> {
       messages: [
         {
           role: "user",
-          content: buildUserPrompt(sourceCode),
+          content: buildUserPrompt(sourceCode, warnings),
         },
       ],
     })

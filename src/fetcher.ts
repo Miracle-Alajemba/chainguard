@@ -3,6 +3,33 @@ import * as dotenv from "dotenv";
 dotenv.config();
 
 const ETHERSCAN_API_KEY = process.env.ETHERSCAN_API_KEY || "";
+const ARBISCAN_API_KEY = process.env.ARBISCAN_API_KEY || ETHERSCAN_API_KEY;
+const OPTIMISMSCAN_API_KEY = process.env.OPTIMISMSCAN_API_KEY || ETHERSCAN_API_KEY;
+const BASESCAN_API_KEY = process.env.BASESCAN_API_KEY || ETHERSCAN_API_KEY;
+
+interface ChainConfig {
+  apiUrl: string;
+  apiKey: string;
+}
+
+const CHAIN_CONFIGS: Record<string, ChainConfig> = {
+  ethereum: {
+    apiUrl: "https://api.etherscan.io/api",
+    apiKey: ETHERSCAN_API_KEY,
+  },
+  base: {
+    apiUrl: "https://api.basescan.org/api",
+    apiKey: BASESCAN_API_KEY,
+  },
+  arbitrum: {
+    apiUrl: "https://api.arbiscan.io/api",
+    apiKey: ARBISCAN_API_KEY,
+  },
+  optimism: {
+    apiUrl: "https://api-optimistic.etherscan.io/api",
+    apiKey: OPTIMISMSCAN_API_KEY,
+  },
+};
 
 function parseSourceCode(sourceCode: string): string {
   const trimmed = sourceCode.trim();
@@ -45,15 +72,15 @@ function parseSourceCode(sourceCode: string): string {
   return trimmed;
 }
 
-export async function fetchContractSource(contractAddress: string): Promise<string> {
+export async function fetchContractSource(contractAddress: string, chain = "ethereum"): Promise<string> {
+  const config = CHAIN_CONFIGS[chain.toLowerCase()] || CHAIN_CONFIGS.ethereum;
   try {
-    // Try Etherscan first
-    const response = await axios.get(`https://api.etherscan.io/api`, {
+    const response = await axios.get(config.apiUrl, {
       params: {
         module: "contract",
         action: "getsourcecode",
         address: contractAddress,
-        apikey: ETHERSCAN_API_KEY,
+        apikey: config.apiKey,
       },
     });
 
@@ -63,12 +90,26 @@ export async function fetchContractSource(contractAddress: string): Promise<stri
       return parseSourceCode(result.SourceCode);
     }
 
-    throw new Error("Contract source code not verified or not found on Etherscan");
+    throw new Error(`Contract source code not verified or not found on ${chain}`);
   } catch (error: any) {
-    throw new Error(`Failed to fetch contract: ${error.message}`);
+    throw new Error(`Failed to fetch contract from ${chain}: ${error.message}`);
   }
 }
 
 export function isContractAddress(input: string): boolean {
-  return /^0x[a-fA-F0-9]{40}$/.test(input);
+  return /^(?:(?:ethereum|base|arbitrum|optimism):)?0x[a-fA-F0-9]{40}$/i.test(input);
+}
+
+export function parseContractInput(input: string): { address: string; chain: string } {
+  const parts = input.split(":");
+  if (parts.length === 2 && CHAIN_CONFIGS[parts[0].toLowerCase()]) {
+    return {
+      address: parts[1].trim(),
+      chain: parts[0].toLowerCase(),
+    };
+  }
+  return {
+    address: input.trim(),
+    chain: "ethereum",
+  };
 }
