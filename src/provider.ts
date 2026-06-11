@@ -11,9 +11,17 @@ dotenv.config();
 const CROO_API_URL = process.env.CROO_API_URL || "https://api.croo.network";
 const CROO_WS_URL = process.env.CROO_WS_URL || "wss://api.croo.network/ws";
 const CROO_SDK_KEY = process.env.CROO_SDK_KEY || "";
+const WALLET_PRIVATE_KEY = process.env.WALLET_PRIVATE_KEY || "";
+const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY || "";
 
 if (!CROO_SDK_KEY) {
   throw new Error("CROO_SDK_KEY is required — set it in .env");
+}
+if (!WALLET_PRIVATE_KEY) {
+  throw new Error("WALLET_PRIVATE_KEY is required — set it in .env");
+}
+if (!ANTHROPIC_API_KEY) {
+  throw new Error("ANTHROPIC_API_KEY is required — set it in .env");
 }
 
 // ── Provider ─────────────────────────────────────────────────────────────────
@@ -28,13 +36,37 @@ export async function startProvider(): Promise<void> {
 
   console.log("⛓️  ChainGuard provider is live — listening for audit orders…");
 
-  // ── Step 1: Auto-accept incoming negotiations ──────────────────────────
+  // ── Step 1: Validate & accept incoming negotiations ───────────────────
 
   stream.on(EventType.NegotiationCreated, async (event) => {
-    const negotiationId = event.negotiation_id!;
+    const negotiationId = event.negotiation_id;
+    if (!negotiationId) {
+      console.error("❌ Negotiation event missing negotiation_id");
+      return;
+    }
     console.log(`📩 Negotiation received: ${negotiationId}`);
 
     try {
+      const negotiation = await client.getNegotiation(negotiationId);
+      
+      const expectedToken = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
+      const expectedAmount = 10000; // 0.01 USDC in base units (6 decimals)
+
+      if (negotiation.fundToken && negotiation.fundToken.toLowerCase() !== expectedToken.toLowerCase()) {
+        console.log(`🚫 Rejecting negotiation ${negotiationId}: Invalid token ${negotiation.fundToken}`);
+        await client.rejectNegotiation(negotiationId, `Invalid payment token. Expected USDC on Base (${expectedToken})`);
+        return;
+      }
+
+      if (negotiation.fundAmount) {
+        const amount = parseFloat(negotiation.fundAmount);
+        if (isNaN(amount) || amount < expectedAmount) {
+          console.log(`🚫 Rejecting negotiation ${negotiationId}: Insufficient payment amount ${negotiation.fundAmount}`);
+          await client.rejectNegotiation(negotiationId, `Insufficient price. Expected at least 0.01 USDC (10000 base units)`);
+          return;
+        }
+      }
+
       const result = await client.acceptNegotiation(negotiationId);
       console.log(`✅ Accepted → Order created: ${result.order.orderId}`);
     } catch (err) {
@@ -45,7 +77,11 @@ export async function startProvider(): Promise<void> {
   // ── Step 2: Process & deliver after payment ────────────────────────────
 
   stream.on(EventType.OrderPaid, async (event) => {
-    const orderId = event.order_id!;
+    const orderId = event.order_id;
+    if (!orderId) {
+      console.error("❌ OrderPaid event missing order_id");
+      return;
+    }
     console.log(`💰 Payment confirmed for order: ${orderId}`);
 
     try {
@@ -119,14 +155,14 @@ export async function startProvider(): Promise<void> {
   // ── Lifecycle logging ──────────────────────────────────────────────────
 
   stream.on(EventType.OrderCompleted, (event) => {
-    console.log(`🎉 Order ${event.order_id} completed and verified on-chain`);
+    console.log(`🎉 Order ${event.order_id || "unknown"} completed and verified on-chain`);
   });
 
   stream.on(EventType.OrderExpired, (event) => {
-    console.log(`⏰ Order ${event.order_id} expired (SLA breach)`);
+    console.log(`⏰ Order ${event.order_id || "unknown"} expired (SLA breach)`);
   });
 
   stream.on(EventType.NegotiationRejected, (event) => {
-    console.log(`🚫 Negotiation ${event.negotiation_id} rejected: ${event.reason || "no reason"}`);
+    console.log(`🚫 Negotiation ${event.negotiation_id || "unknown"} rejected: ${event.reason || "no reason"}`);
   });
 }

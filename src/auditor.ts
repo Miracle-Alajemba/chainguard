@@ -66,21 +66,36 @@ function buildUserPrompt(sourceCode: string): string {
 // ── Auditor ──────────────────────────────────────────────────────────────────
 
 const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
+  apiKey: process.env.ANTHROPIC_API_KEY || "",
 });
 
+async function callWithRetry<T>(fn: () => Promise<T>, retries = 3, delay = 1000): Promise<T> {
+  try {
+    return await fn();
+  } catch (error) {
+    if (retries <= 0) {
+      throw error;
+    }
+    console.warn(`⚠️ API call failed. Retrying in ${delay}ms... Error: ${(error as Error).message}`);
+    await new Promise((resolve) => setTimeout(resolve, delay));
+    return callWithRetry(fn, retries - 1, delay * 2);
+  }
+}
+
 export async function auditContract(sourceCode: string): Promise<AuditReport> {
-  const message = await anthropic.messages.create({
-    model: "claude-sonnet-4-5",
-    max_tokens: 2000,
-    system: SYSTEM_PROMPT,
-    messages: [
-      {
-        role: "user",
-        content: buildUserPrompt(sourceCode),
-      },
-    ],
-  });
+  const message = await callWithRetry(() =>
+    anthropic.messages.create({
+      model: "claude-sonnet-4-5",
+      max_tokens: 2000,
+      system: SYSTEM_PROMPT,
+      messages: [
+        {
+          role: "user",
+          content: buildUserPrompt(sourceCode),
+        },
+      ],
+    })
+  );
 
   // Extract the text content from Claude's response
   const textBlock = message.content.find((block) => block.type === "text");
@@ -89,11 +104,16 @@ export async function auditContract(sourceCode: string): Promise<AuditReport> {
   }
 
   const raw = textBlock.text.trim();
-  const cleaned = raw
-    .replace(/^```json\s*/i, '')
-    .replace(/^```\s*/i, '')
-    .replace(/```\s*$/i, '')
-    .trim();
+
+  // Robustly extract the JSON block by finding the outermost curly braces
+  const firstBrace = raw.indexOf("{");
+  const lastBrace = raw.lastIndexOf("}");
+
+  if (firstBrace === -1 || lastBrace === -1 || lastBrace < firstBrace) {
+    throw new Error(`Could not find valid JSON boundaries in response: ${raw}`);
+  }
+
+  const cleaned = raw.substring(firstBrace, lastBrace + 1);
 
   // Parse and return the structured report
   try {
