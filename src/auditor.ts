@@ -1,7 +1,5 @@
 import Anthropic from "@anthropic-ai/sdk";
-import * as dotenv from "dotenv";
 import { analyzeSolidityCode } from "./analyzer";
-dotenv.config();
 
 // ── Types ────────────────────────────────────────────────────────────────────
 

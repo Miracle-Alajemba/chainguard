@@ -1,5 +1,4 @@
 import { AgentClient, EventType, DeliverableType } from "@croo-network/sdk";
-import * as dotenv from "dotenv";
 import { fetchContractSource, isContractAddress, parseContractInput } from "./fetcher";
 import { auditContract } from "./auditor";
 import { hashResult } from "./hasher";
@@ -59,7 +58,6 @@ ${gasMd}
 `;
 }
 
-dotenv.config();
 
 // ── Environment ──────────────────────────────────────────────────────────────
 
