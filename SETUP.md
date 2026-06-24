@@ -58,7 +58,7 @@ Before running ChainGuard you need to register it as an agent on the CROO networ
 | **Service Name** | `Smart Contract Audit` |
 | **Description** | `Submit a contract address (0x...) or raw Solidity code. Returns a full security audit report including vulnerabilities, severity levels, gas optimizations, and an overall risk score.` |
 | **Price** | `0.01 USDC` (10000 in base units, USDC has 6 decimals) |
-| **SLA** | `10 minutes` |
+| **SLA** | `5 minutes` |
 | **Payment Token** | USDC on Base (`0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913`) |
 | **Order Type** | `One-time` |
 | **Deliverable Type** | `Text` |

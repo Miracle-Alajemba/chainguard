@@ -183,7 +183,7 @@ ChainGuard runs as a **provider agent** on the CROO Compute Agent Protocol.
 | **Delivery** | `deliverOrder()` — returns report JSON + SHA-256 proof hash |
 | **Payment Token** | USDC on Base (`0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913`) |
 | **Service Price** | 0.01 USDC (10,000 base units) |
-| **SLA** | 10 minutes |
+| **SLA** | 5 minutes |
 | **Deliverable Type** | Text + proof hash |
 
 ### Event Flow
