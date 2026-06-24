@@ -101,24 +101,7 @@ export async function startProvider(): Promise<void> {
 
     try {
       const negotiation = await client.getNegotiation(negotiationId);
-      
-      const expectedToken = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
-      const expectedAmount = 10000; // 0.01 USDC in base units (6 decimals)
-
-      if (negotiation.fundToken && negotiation.fundToken.toLowerCase() !== expectedToken.toLowerCase()) {
-        console.log(`🚫 Rejecting negotiation ${negotiationId}: Invalid token ${negotiation.fundToken}`);
-        await client.rejectNegotiation(negotiationId, `Invalid payment token. Expected USDC on Base (${expectedToken})`);
-        return;
-      }
-
-      if (negotiation.fundAmount) {
-        const amount = parseFloat(negotiation.fundAmount);
-        if (isNaN(amount) || amount < expectedAmount) {
-          console.log(`🚫 Rejecting negotiation ${negotiationId}: Insufficient payment amount ${negotiation.fundAmount}`);
-          await client.rejectNegotiation(negotiationId, `Insufficient price. Expected at least 0.01 USDC (10000 base units)`);
-          return;
-        }
-      }
+      console.log(`   → Service: ${negotiation.serviceId} | Status: ${negotiation.status}`);
 
       const result = await client.acceptNegotiation(negotiationId);
       console.log(`✅ Accepted → Order created: ${result.order.orderId}`);
