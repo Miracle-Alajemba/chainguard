@@ -72,7 +72,7 @@ const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY || "",
 });
 
-async function callWithRetry<T>(fn: () => Promise<T>, retries = 3, delay = 1000): Promise<T> {
+async function callWithRetry<T>(fn: () => Promise<T>, retries = 2, delay = 500): Promise<T> {
   try {
     return await fn();
   } catch (error) {
@@ -90,8 +90,8 @@ export async function auditContract(sourceCode: string): Promise<AuditReport> {
 
   const message = await callWithRetry(() =>
     anthropic.messages.create({
-      model: "claude-sonnet-4-5",
-      max_tokens: 2000,
+      model: "claude-haiku-4-5",
+      max_tokens: 1500,
       system: SYSTEM_PROMPT,
       messages: [
         {
