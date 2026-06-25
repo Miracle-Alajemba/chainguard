@@ -1,169 +1,71 @@
-# ⛓️ ChainGuard
+# <img src="./chainguard_logo.png" alt="ChainGuard Logo" width="60" valign="middle"> ChainGuard
 
-**AI-powered Smart Contract Security Auditor on CROO CAP**
+### **AI-Powered Smart Contract Security Auditor on CROO CAP**
 
-![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)
-![Built on CROO CAP](https://img.shields.io/badge/Built%20on-CROO%20CAP-blue.svg)
-![Powered by Claude AI](https://img.shields.io/badge/Powered%20by-Claude%20AI-blueviolet.svg)
-
----
-
-## Overview
-
-ChainGuard is an autonomous AI agent that performs instant smart contract security audits on the [CROO CAP](https://croo.network) decentralized marketplace. Submit a contract address or paste raw Solidity code — get back a comprehensive vulnerability report in seconds.
-
-**Why it matters:** Traditional smart contract audits cost **$5,000–$50,000** and take **weeks** to complete. ChainGuard delivers a detailed security analysis in **seconds** for just **0.01 USDC** — making professional-grade auditing accessible to everyone.
-
-**Who it's for:**
-- **Developers** — get instant feedback on your contracts before deploying to mainnet
-- **DAOs** — audit governance contracts and treasury logic without expensive retainers
-- **AI Agents** — composable A2A integration lets other agents hire ChainGuard automatically through CROO CAP
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Built on CROO CAP](https://img.shields.io/badge/Built%20on-CROO%20CAP-blue.svg)](https://croo.network)
+[![Powered by Claude AI](https://img.shields.io/badge/Powered%20by-Claude--haiku--4.5-blueviolet.svg)](https://anthropic.com)
+[![Network: Base](https://img.shields.io/badge/Network-Base-blue.svg)](https://base.org)
+[![Price: 0.10 USDC](https://img.shields.io/badge/Price-0.10%20USDC-gold.svg)](#)
 
 ---
 
-## Features
+## 🧠 What is ChainGuard? (Explain Like I'm 5)
 
-- ✅ **Accepts contract address or raw Solidity code** — submit a deployed `0x...` address or paste source directly
-- 🔍 **Vulnerability detection with severity ratings** — findings classified as Critical, High, Medium, Low, or Informational
-- 📊 **Overall risk score** — 0–100 security rating with risk level classification
-- ⛽ **Gas optimization suggestions** — actionable recommendations to reduce deployment and execution costs
-- 🔐 **Delivery proof hash** — SHA-256 hash of the report for on-chain verification via CAP
-- 🤖 **A2A composable** — other agents can discover and hire ChainGuard automatically on the CROO Agent Store
+Imagine you are building a house. Before you move in, you want to make sure the roof won't collapse and the doors lock properly. Typically, you'd hire a home inspector, pay them thousands of dollars, and wait weeks for a report.
 
----
+**ChainGuard is like an instant, automated inspector for smart contracts (blockchain code).** 
 
-## How It Works
-
-```
-  Requester                          ChainGuard
-      │                                  │
-  1.  ├─── Submit contract + pay ───────►│
-      │                                  │
-  2.  │                    Fetch source ──┤ (Etherscan, if address)
-      │                                  │
-  3.  │                     AI Audit ─────┤ (Claude analyses code)
-      │                                  │
-  4.  │                  Generate proof ──┤ (SHA-256 hash)
-      │                                  │
-  5.  │◄── Deliver report + proof ───────┤
-      │                                  │
-```
-
-**Step by step:**
-
-1. **Submit** — A requester sends a contract address or Solidity code via CROO CAP negotiation
-2. **Pay** — Payment of 0.01 USDC is confirmed on Base
-3. **Fetch Source** — If an address was provided, ChainGuard fetches verified source from Etherscan
-4. **AI Audit** — Claude AI analyses the code for vulnerabilities, access control issues, reentrancy risks, gas inefficiencies, and more
-5. **Deliver Proof** — The structured JSON report and its SHA-256 proof hash are delivered back through CAP
+Instead of waiting weeks and paying $10,000+ for a human auditing firm, you send your smart contract code to ChainGuard. In **under 30 seconds** and for just **0.10 USDC (ten cents)**, ChainGuard's AI engine scans the code, finds security flaws (vulnerabilities), rates how dangerous they are, and tells you exactly how to fix them.
 
 ---
 
-## Tech Stack
+## ⚡ Quick Start: How to Get an Audit (No Technical Skills Required)
 
-| Component | Technology |
-|-----------|-----------|
-| **Runtime** | Node.js + TypeScript |
-| **Protocol** | CROO CAP SDK (`@croo-network/sdk`) |
-| **AI Engine** | Anthropic Claude API (`claude-sonnet-4-5`) |
-| **Blockchain Data** | Etherscan API |
-| **Payment Chain** | Base Network (USDC) |
+You don't need to know how to code to use ChainGuard. You can hire the agent directly from your web browser:
 
----
-
-## Setup & Installation
-
-### Prerequisites
-
-- Node.js 18+
-- A crypto wallet (MetaMask, Rabby, etc.)
-- USDC on Base for receiving payments
-
-### Install
-
-```bash
-git clone https://github.com/Miracle-Alajemba/chainguard.git
-cd chainguard
-npm install
-```
-
-### Configure Environment
-
-Create a `.env` file in the project root:
-
-```env
-CROO_API_URL=https://api.croo.network
-CROO_WS_URL=wss://api.croo.network/ws
-WALLET_PRIVATE_KEY=
-CROO_SDK_KEY=
-ANTHROPIC_API_KEY=
-ETHERSCAN_API_KEY=
-```
-
-| Variable | Source |
-|----------|--------|
-| `CROO_SDK_KEY` | CROO Dashboard — see [SETUP.md](SETUP.md) |
-| `ANTHROPIC_API_KEY` | [console.anthropic.com](https://console.anthropic.com/) |
-| `ETHERSCAN_API_KEY` | [etherscan.io/apis](https://etherscan.io/apis) |
-| `WALLET_PRIVATE_KEY` | Your wallet's private key |
-
-### Register on CROO Network
-
-Follow the step-by-step guide in **[SETUP.md](SETUP.md)** to register ChainGuard on the CROO Dashboard, deploy the agent wallet, and generate your SDK key.
+1. **Go to the Agent Store:** Open the **[CROO Agent Store](https://agent.croo.network)**.
+2. **Find ChainGuard:** Search for the **Smart Contract Audit** service.
+3. **Submit Your Code:** 
+   - Paste a deployed smart contract address (like `0x...` on Ethereum/Base), OR
+   - Paste the raw Solidity code directly into the input box.
+4. **Pay & Run:** Approve the **0.10 USDC** payment. 
+5. **Get Your Report:** Within **30 seconds**, your detailed security audit report will be delivered directly to your dashboard!
 
 ---
 
-## Usage
+## 🚀 Key Features
 
-### Start the Agent
+* **⚡ Lightning Fast:** Audits are generated and delivered in under 30 seconds (100x faster than traditional audits).
+* **🔍 Deep AI Inspection:** Powered by Anthropic's state-of-the-art Claude AI model to catch complex vulnerabilities like Reentrancy, Overflow, and Access Control bypasses.
+* **📊 Risk Scoring:** Provides a clear security score from `0` (Critical Risk) to `100` (Perfect Security).
+* **💡 Actionable Fixes:** Every vulnerability found comes with a clear explanation and the exact code changes needed to fix it.
+* **⛽ Gas Optimization:** Tells you how to write more efficient code to save your users money on transaction fees (gas).
+* **🔗 Cryptographic Proof:** Every audit report is mathematically hashed (SHA-256), providing a permanent, verifiable proof of the audit on-chain.
 
-```bash
-# Development
-npm start
+---
 
-# Production
-npm run build
-npm run start:prod
-```
+## 📋 Example Audit Output
 
-### Hire ChainGuard on the Agent Store
-
-1. Go to **[agent.croo.network](https://agent.croo.network)**
-2. Find **ChainGuard — Smart Contract Audit** in the Agent Store
-3. Submit a contract address or paste Solidity code as the order requirement
-4. Pay 0.01 USDC — the audit report is delivered automatically
-
-### Example Audit Output
-
-Here's a real audit result for the **DAI Stablecoin** contract:
+Here is a preview of the clean, structured report you receive:
 
 ```json
 {
-  "overallScore": 78,
-  "riskLevel": "Low",
+  "overallScore": 15,
+  "riskLevel": "Critical",
   "vulnerabilities": [
     {
-      "name": "Centralized Authorization Control",
-      "severity": "Medium",
-      "description": "The 'rely' and 'deny' functions allow any ward to add or remove other wards, creating a centralized point of control.",
-      "recommendation": "Implement a multi-sig or timelock mechanism for administrative functions."
-    },
-    {
-      "name": "Permit Front-Running",
-      "severity": "Low",
-      "description": "The EIP-2612 permit function could be susceptible to front-running attacks.",
-      "recommendation": "Users should be aware of potential front-running when using permit approvals."
+      "name": "Classic Reentrancy Vulnerability",
+      "severity": "Critical",
+      "description": "The withdraw() function transfers funds to msg.sender before setting their balance to zero, allowing an attacker to repeatedly call withdraw() and drain the contract.",
+      "recommendation": "Update the user's balance BEFORE sending funds (Checks-Effects-Interactions pattern)."
     }
   ],
-  "summary": "The DAI contract is a well-structured ERC-20 implementation with EIP-2612 permit support. The primary concerns are around centralized ward control and minor front-running vectors. Overall, the contract demonstrates solid engineering practices with room for governance decentralization.",
+  "summary": "This contract has critical security vulnerabilities. Do NOT deploy this to mainnet until you fix the reentrancy flaw.",
   "gasOptimizations": [
     {
-      "description": "Use 'unchecked' blocks for arithmetic operations where overflow is impossible",
-      "estimatedSavings": "~200-500 gas per transfer"
-    },
-    {
-      "description": "Cache storage variables in memory when accessed multiple times",
-      "estimatedSavings": "~100 gas per redundant SLOAD"
+      "description": "Use 'unchecked' blocks for arithmetic operations where overflow is impossible.",
+      "estimatedSavings": "~200 gas per transaction"
     }
   ]
 }
@@ -171,60 +73,109 @@ Here's a real audit result for the **DAI Stablecoin** contract:
 
 ---
 
-## CROO CAP Integration
+## ⚙️ How It Works Under the Hood
 
-ChainGuard runs as a **provider agent** on the CROO Compute Agent Protocol.
+```
+   [ User / Client ] 
+           │
+           │  1. Request Audit & Pay 0.10 USDC
+           ▼
+   [ CROO CAP Protocol ]
+           │
+           │  2. Directs order to ChainGuard Agent
+           ▼
+    [ ChainGuard Agent ] ──► 3. Fetches contract source from Etherscan (if address)
+           │
+           ├───► 4. Passes code to Anthropic Claude for AI security scan
+           │
+           ├───► 5. Generates SHA-256 cryptographic proof of the audit
+           ▼
+   [ Delivery on Base ] ◄── 6. Delivers JSON report & proof hash back to User
+```
+
+---
+
+## 🛠️ Developer Guide (Self-Hosting & Running the Agent)
+
+If you are a developer and want to run your own ChainGuard agent node on the CROO network, follow these steps.
+
+### 1. Prerequisites
+- **Node.js** (v18 or higher)
+- **Base Network Wallet** with some gas fee funds
+- **Anthropic API Key** (for Claude AI)
+- **Etherscan API Key** (for fetching contract code by address)
+- **CROO Developer SDK Key**
+
+### 2. Installation
+Clone the repository and install dependencies:
+```bash
+git clone https://github.com/Miracle-Alajemba/chainguard.git
+cd chainguard
+npm install
+```
+
+### 3. Environment Setup
+Create a `.env` file in the root directory:
+```env
+CROO_API_URL=https://api.croo.network
+CROO_WS_URL=wss://api.croo.network/ws
+CROO_SDK_KEY=your_croo_sdk_key
+WALLET_PRIVATE_KEY=your_wallet_private_key
+ANTHROPIC_API_KEY=your_anthropic_api_key
+ETHERSCAN_API_KEY=your_etherscan_api_key
+```
+
+### 4. Running the Agent
+Start the agent in development mode:
+```bash
+npm start
+```
+Or build and run in production mode:
+```bash
+npm run build
+npm run start:prod
+```
+
+For detailed step-by-step instructions on deploying the wallet, setting up services, and acquiring keys, read the **[SETUP.md](SETUP.md)** guide.
+
+---
+
+## 📂 Project Structure
+
+* **[src/index.ts](file:///home/miracle-alajemba/Desktop/chainguard/src/index.ts)** — Entry point of the application. Displays startup banners and handles process events.
+* **[src/provider.ts](file:///home/miracle-alajemba/Desktop/chainguard/src/provider.ts)** — Manages connection to CROO CAP, listens for events, and handles the order lifecycle.
+* **[src/auditor.ts](file:///home/miracle-alajemba/Desktop/chainguard/src/auditor.ts)** — Integrates with Anthropic Claude AI to perform security scanning and structure reports.
+* **[src/fetcher.ts](file:///home/miracle-alajemba/Desktop/chainguard/src/fetcher.ts)** — Fetches verified smart contract source code from Etherscan APIs.
+* **[src/hasher.ts](file:///home/miracle-alajemba/Desktop/chainguard/src/hasher.ts)** — Generates secure SHA-256 cryptographic hashes for deliverables.
+
+---
+
+## 🤝 CROO CAP Protocol Details
+
+ChainGuard is a **Provider Agent** operating under the Compute Agent Protocol (CAP).
 
 | Parameter | Value |
 |-----------|-------|
-| **SDK Client** | `AgentClient` from `@croo-network/sdk` |
-| **Connection** | `connectWebSocket()` — real-time event streaming |
-| **Negotiation** | `acceptNegotiation()` — auto-accepts all incoming orders |
-| **Delivery** | `deliverOrder()` — returns report JSON + SHA-256 proof hash |
+| **Service Price** | `0.10 USDC` (100,000 base units) |
+| **SLA (Max Delivery Time)** | `5 minutes` (Actual: under 30 seconds) |
 | **Payment Token** | USDC on Base (`0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913`) |
-| **Service Price** | 0.01 USDC (10,000 base units) |
-| **SLA** | 5 minutes |
-| **Deliverable Type** | Text + proof hash |
-
-### Event Flow
-
-```
-NegotiationCreated → acceptNegotiation()
-OrderPaid          → fetchSource() → auditContract() → hashResult() → deliverOrder()
-OrderCompleted     → ✅ verified on-chain
-```
+| **Deliverable Type** | Text (JSON formatted) + Cryptographic Proof Hash |
 
 ---
 
-## Project Structure
+## ❓ FAQ
 
-```
-chainguard/
-├── src/
-│   ├── index.ts       # Entry point — startup banner, graceful shutdown
-│   ├── provider.ts    # CROO CAP provider — order lifecycle management
-│   ├── auditor.ts     # Claude AI audit engine — structured JSON reports
-│   ├── fetcher.ts     # Etherscan verified source code fetcher
-│   └── hasher.ts      # SHA-256 delivery proof generator
-├── SETUP.md           # CROO Dashboard setup walkthrough
-├── package.json
-├── tsconfig.json
-└── .env               # API keys (not committed)
-```
+### 1. Why is it so cheap?
+Traditional audits require hours of manual labor by highly paid security engineers. ChainGuard leverages AI models that can analyze thousands of lines of code in seconds, keeping operating costs minimal.
+
+### 2. Can I trust an AI audit?
+AI audits are incredibly fast and cost-effective, making them perfect for **continuous testing during development** or for smaller projects. However, they should not completely replace a final human audit for high-value mainnet protocols holding millions of dollars.
+
+### 3. Does it keep my code private?
+ChainGuard does not store your code. The code is fetched, sent to the Claude API for analysis, and the report is delivered. All processing happens in-memory.
 
 ---
 
-## Live Agent
+## 📄 License
 
-| | |
-|---|---|
-| **Agent Store** | [agent.croo.network](https://agent.croo.network) |
-| **Network** | Base |
-| **Service** | Smart Contract Audit |
-| **Price** | 0.01 USDC |
-
----
-
-## License
-
-MIT
+This project is licensed under the MIT License - see the LICENSE file for details.
