@@ -91,7 +91,7 @@ export async function auditContract(sourceCode: string): Promise<AuditReport> {
   const message = await callWithRetry(() =>
     anthropic.messages.create({
       model: "claude-haiku-4-5",
-      max_tokens: 1500,
+      max_tokens: 4096,
       system: SYSTEM_PROMPT,
       messages: [
         {
