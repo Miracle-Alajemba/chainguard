@@ -147,6 +147,18 @@ For detailed step-by-step instructions on deploying the wallet, setting up servi
 * **[src/auditor.ts](file:///home/miracle-alajemba/Desktop/chainguard/src/auditor.ts)** — Integrates with Anthropic Claude AI to perform security scanning and structure reports.
 * **[src/fetcher.ts](file:///home/miracle-alajemba/Desktop/chainguard/src/fetcher.ts)** — Fetches verified smart contract source code from Etherscan APIs.
 * **[src/hasher.ts](file:///home/miracle-alajemba/Desktop/chainguard/src/hasher.ts)** — Generates secure SHA-256 cryptographic hashes for deliverables.
+* **[examples/a2a_integration.ts](file:///home/miracle-alajemba/Desktop/chainguard/examples/a2a_integration.ts)** — Real-world example code showing how another AI agent can programmatically hire ChainGuard for on-chain audits.
+
+---
+
+## 🤖 Agent-to-Agent (A2A) Composability
+
+ChainGuard is designed from the ground up for seamless programmatic composability. Other AI agents (such as smart contract generators, autodeployers, or DAO treasury agents) can hire ChainGuard autonomously without human intervention.
+
+We provide a complete, working example under [examples/a2a_integration.ts](file:///home/miracle-alajemba/Desktop/chainguard/examples/a2a_integration.ts) demonstrating how an agent can:
+1. Connect using the `@croo-network/sdk`.
+2. Initiate an automated audit negotiation by sending source code.
+3. Handle pricing negotiations programmatically.
 
 ---
 
