@@ -2,6 +2,10 @@ import { AgentClient, EventType, DeliverableType } from "@croo-network/sdk";
 import { fetchContractSource, isContractAddress, parseContractInput } from "./fetcher";
 import { auditContract } from "./auditor";
 import { hashResult } from "./hasher";
+import { analyzeToken } from "./tokenAnalyzer";
+import { scanWallet } from "./walletScanner";
+import { optimizeGas } from "./gasOptimizer";
+
 
 function generateMarkdownReport(report: any, contractInput: string): string {
   let vulnerabilitiesMd = "";
@@ -127,48 +131,90 @@ export async function startProvider(): Promise<void> {
       const input = (negotiation.requirements || "").trim();
 
       if (!input) {
-        throw new Error("No input provided — expected a contract address or Solidity source code");
+        throw new Error("No input provided — expected a contract address, wallet address, or Solidity source code");
       }
 
-      // Resolve source code: fetch from Etherscan if address, otherwise use raw input
-      console.log(`🔍 Resolving source code…`);
-      let sourceCode: string;
+      // Read the service name from negotiation to determine which service was ordered
+      const serviceId = negotiation.serviceId;
+      const serviceNameFromMetadata = (() => {
+        try {
+          const meta = JSON.parse(negotiation.metadata || "{}");
+          return meta.serviceName || meta.service_name;
+        } catch {
+          return null;
+        }
+      })();
 
-      if (isContractAddress(input)) {
-        const { address, chain } = parseContractInput(input);
-        console.log(`   → Fetching verified source for ${address} on chain ${chain}`);
-        sourceCode = await fetchContractSource(address, chain);
+      const service = (negotiation as any).serviceName || 
+                      (negotiation as any).service_name || 
+                      (negotiation as any).service?.name || 
+                      serviceNameFromMetadata ||
+                      (serviceId === process.env.SERVICE_ID_TOKEN ? "Token Contract Analyzer" :
+                       serviceId === process.env.SERVICE_ID_WALLET ? "Wallet Security Scan" :
+                       serviceId === process.env.SERVICE_ID_GAS ? "Gas Optimizer" :
+                       "Smart Contract Audit");
+
+      console.log(`🛎️  Routing paid order ${orderId} to service: "${service}"`);
+
+      let reportJson = "";
+      let proofHash = "";
+
+      if (service === "Token Contract Analyzer") {
+        console.log(`🤖 Running Token Contract Analysis for ${input}…`);
+        const report = await analyzeToken(input);
+        reportJson = JSON.stringify(report, null, 2);
+        proofHash = hashResult(reportJson);
+        console.log(`📊 Token analysis complete — Safety Score: ${report.safetyScore}/100 | Verdict: ${report.verdict}`);
+      } else if (service === "Wallet Security Scan") {
+        console.log(`🕵️ Running Wallet Security Scan for ${input}…`);
+        const report = await scanWallet(input);
+        reportJson = JSON.stringify(report, null, 2);
+        proofHash = hashResult(reportJson);
+        console.log(`📊 Wallet scan complete — Trust Score: ${report.trustScore}/100 | Verdict: ${report.verdict}`);
+      } else if (service === "Gas Optimizer") {
+        console.log(`⛽ Running Solidity Gas Optimization for contract…`);
+        const report = await optimizeGas(input);
+        reportJson = JSON.stringify(report, null, 2);
+        proofHash = hashResult(reportJson);
+        console.log(`📊 Gas optimization complete — Functions Analyzed: ${report.totalFunctionsAnalyzed} | Est. Savings: ${report.estimatedTotalSavings}`);
       } else {
-        console.log(`   → Using provided Solidity source code`);
-        sourceCode = input;
+        // Default: Smart Contract Audit
+        console.log(`🔍 Resolving source code…`);
+        let sourceCode: string;
+
+        if (isContractAddress(input)) {
+          const { address, chain } = parseContractInput(input);
+          console.log(`   → Fetching verified source for ${address} on chain ${chain}`);
+          sourceCode = await fetchContractSource(address, chain);
+        } else {
+          console.log(`   → Using provided Solidity source code`);
+          sourceCode = input;
+        }
+
+        console.log(`🤖 Running AI security audit…`);
+        const report = await auditContract(sourceCode);
+
+        console.log(`📄 Generating Markdown report…`);
+        const markdownReport = generateMarkdownReport(report, input);
+        const reportFileName = `audit-${orderId}.md`;
+
+        console.log(`📤 Uploading report file to CROO storage…`);
+        const objectKey = await client.uploadFile(reportFileName, Buffer.from(markdownReport));
+        const downloadUrl = await client.getDownloadURL(objectKey);
+
+        console.log(`🔗 Hosted report URL: ${downloadUrl}`);
+
+        const finalReport = {
+          ...report,
+          reportUrl: downloadUrl,
+        };
+
+        reportJson = JSON.stringify(finalReport, null, 2);
+        proofHash = hashResult(reportJson);
+
+        console.log(`📊 Audit complete — Score: ${report.overallScore}/100 | Risk: ${report.riskLevel}`);
       }
 
-      // Run the AI audit
-      console.log(`🤖 Running AI security audit…`);
-      const report = await auditContract(sourceCode);
-
-      // Generate Markdown report and upload to storage
-      console.log(`📄 Generating Markdown report…`);
-      const markdownReport = generateMarkdownReport(report, input);
-      const reportFileName = `audit-${orderId}.md`;
-
-      console.log(`📤 Uploading report file to CROO storage…`);
-      const objectKey = await client.uploadFile(reportFileName, Buffer.from(markdownReport));
-      const downloadUrl = await client.getDownloadURL(objectKey);
-
-      console.log(`🔗 Hosted report URL: ${downloadUrl}`);
-
-      // Inject the download link into the report JSON
-      const finalReport = {
-        ...report,
-        reportUrl: downloadUrl,
-      };
-
-      // Prepare the deliverable
-      const reportJson = JSON.stringify(finalReport, null, 2);
-      const proofHash = hashResult(reportJson);
-
-      console.log(`📊 Audit complete — Score: ${report.overallScore}/100 | Risk: ${report.riskLevel}`);
       console.log(`🔐 Delivery proof hash: ${proofHash}`);
 
       // Deliver result back through CAP
