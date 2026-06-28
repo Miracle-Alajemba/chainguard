@@ -111,3 +111,97 @@ export function parseContractInput(input: string): { address: string; chain: str
     chain: "ethereum",
   };
 }
+
+const GECKO_NETWORKS: Record<string, string> = {
+  ethereum: "eth",
+  base: "base",
+  arbitrum: "arbitrum",
+  optimism: "optimism",
+};
+
+export async function fetchTokenData(contractAddress: string, chain = "ethereum"): Promise<any> {
+  const parsed = parseContractInput(contractAddress);
+  const address = parsed.address;
+  const targetChain = parsed.chain || chain;
+
+  const blockscoutChains: Record<string, string> = {
+    ethereum: "eth",
+    base: "base",
+    arbitrum: "arbitrum",
+    optimism: "optimism",
+  };
+
+  const bsChain = blockscoutChains[targetChain.toLowerCase()] || "eth";
+  try {
+    const url = `https://${bsChain}.blockscout.com/api/v2/tokens/${address}`;
+    const response = await axios.get(url);
+    if (response.data) {
+      return {
+        name: response.data.name || "Unknown Token",
+        symbol: response.data.symbol || "UNKNOWN",
+        decimals: Number(response.data.decimals || 18),
+        totalSupply: response.data.total_supply || "Unknown",
+        type: response.data.type || "ERC-20",
+      };
+    }
+  } catch (error: any) {
+    console.warn(`Blockscout token info failed: ${error.message}. Trying GeckoTerminal fallback...`);
+  }
+
+  const geckoNetwork = GECKO_NETWORKS[targetChain.toLowerCase()] || "eth";
+  try {
+    const url = `https://api.geckoterminal.com/api/v2/networks/${geckoNetwork}/tokens/${address}/info`;
+    const response = await axios.get(url, {
+      headers: {
+        Accept: "application/json;version=20230203",
+      },
+    });
+    const data = response.data?.data?.attributes;
+    if (data) {
+      return {
+        name: data.name,
+        symbol: data.symbol,
+        decimals: data.decimals || 18,
+        totalSupply: "Unknown",
+        type: "ERC-20",
+      };
+    }
+  } catch (error: any) {
+    console.warn(`GeckoTerminal token info failed: ${error.message}`);
+  }
+
+  return {
+    name: "Unknown Token",
+    symbol: "UNKNOWN",
+    decimals: 18,
+    totalSupply: "Unknown",
+    type: "ERC-20",
+  };
+}
+
+export async function fetchTokenHolders(contractAddress: string, chain = "ethereum"): Promise<number> {
+  const parsed = parseContractInput(contractAddress);
+  const address = parsed.address;
+  const targetChain = parsed.chain || chain;
+
+  const blockscoutChains: Record<string, string> = {
+    ethereum: "eth",
+    base: "base",
+    arbitrum: "arbitrum",
+    optimism: "optimism",
+  };
+
+  const bsChain = blockscoutChains[targetChain.toLowerCase()] || "eth";
+  try {
+    const url = `https://${bsChain}.blockscout.com/api/v2/tokens/${address}`;
+    const response = await axios.get(url);
+    if (response.data && response.data.holders !== undefined) {
+      return Number(response.data.holders);
+    }
+  } catch (error: any) {
+    console.warn(`Blockscout getTokenHolders failed: ${error.message}`);
+  }
+
+  return 0;
+}
+
