@@ -70,14 +70,28 @@ function parseSourceCode(sourceCode: string): string {
   return trimmed;
 }
 
+const CHAIN_IDS: Record<string, number> = {
+  ethereum: 1,
+  base: 8453,
+  arbitrum: 42161,
+  optimism: 10,
+};
+
 export async function fetchContractSource(contractAddress: string, chain = "ethereum"): Promise<string> {
-  const config = CHAIN_CONFIGS[chain.toLowerCase()] || CHAIN_CONFIGS.ethereum;
+  const parsed = parseContractInput(contractAddress);
+  const address = parsed.address;
+  const targetChain = parsed.chain || chain;
+
+  const chainId = CHAIN_IDS[targetChain.toLowerCase()] || 1;
+  const config = CHAIN_CONFIGS[targetChain.toLowerCase()] || CHAIN_CONFIGS.ethereum;
+
   try {
-    const response = await axios.get(config.apiUrl, {
+    const response = await axios.get("https://api.etherscan.io/v2/api", {
       params: {
         module: "contract",
         action: "getsourcecode",
-        address: contractAddress,
+        address: address,
+        chainid: chainId,
         apikey: config.apiKey,
       },
     });
@@ -88,11 +102,12 @@ export async function fetchContractSource(contractAddress: string, chain = "ethe
       return parseSourceCode(result.SourceCode);
     }
 
-    throw new Error(`Contract source code not verified or not found on ${chain}`);
+    throw new Error(`Contract source code not verified or not found on ${targetChain}`);
   } catch (error: any) {
-    throw new Error(`Failed to fetch contract from ${chain}: ${error.message}`);
+    throw new Error(`Failed to fetch contract from ${targetChain}: ${error.message}`);
   }
 }
+
 
 export function isContractAddress(input: string): boolean {
   return /^(?:(?:ethereum|base|arbitrum|optimism):)?0x[a-fA-F0-9]{40}$/i.test(input);
@@ -204,4 +219,56 @@ export async function fetchTokenHolders(contractAddress: string, chain = "ethere
 
   return 0;
 }
+
+export async function fetchWalletActivity(walletAddress: string, chain = "ethereum"): Promise<any[]> {
+  const parsed = parseContractInput(walletAddress);
+  const address = parsed.address;
+  const targetChain = parsed.chain || chain;
+
+  const chainId = CHAIN_IDS[targetChain.toLowerCase()] || 1;
+  const config = CHAIN_CONFIGS[targetChain.toLowerCase()] || CHAIN_CONFIGS.ethereum;
+  try {
+    const response = await axios.get("https://api.etherscan.io/v2/api", {
+      params: {
+        module: "account",
+        action: "txlist",
+        address: address,
+        startblock: 0,
+        endblock: 99999999,
+        page: 1,
+        offset: 50, // Get last 50 transactions to keep it rich but not exceed token limits
+        sort: "desc",
+        chainid: chainId,
+        apikey: config.apiKey,
+      },
+    });
+
+    if (response.data && Array.isArray(response.data.result)) {
+      return response.data.result.map((tx: any) => ({
+        blockNumber: tx.blockNumber,
+        timeStamp: tx.timeStamp,
+        hash: tx.hash,
+        from: tx.from,
+        to: tx.to,
+        value: tx.value,
+        gas: tx.gas,
+        gasPrice: tx.gasPrice,
+        isError: tx.isError,
+        txreceipt_status: tx.txreceipt_status,
+        input: tx.input,
+        contractAddress: tx.contractAddress,
+        gasUsed: tx.gasUsed,
+        confirmations: tx.confirmations,
+        methodId: tx.methodId,
+        functionName: tx.functionName,
+      }));
+    }
+  } catch (error: any) {
+    console.warn(`Failed to fetch wallet activity from ${targetChain}: ${error.message}`);
+  }
+
+  return [];
+}
+
+
 
