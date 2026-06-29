@@ -7,60 +7,6 @@ import { scanWallet } from "./walletScanner";
 import { optimizeGas } from "./gasOptimizer";
 
 
-function generateMarkdownReport(report: any, contractInput: string): string {
-  let vulnerabilitiesMd = "";
-  if (Array.isArray(report.vulnerabilities) && report.vulnerabilities.length > 0) {
-    vulnerabilitiesMd = report.vulnerabilities
-      .map(
-        (v: any) => `
-### ⚠️ ${v.name || "Unnamed Vulnerability"} (${v.severity || "Unknown Severity"})
-* **Description:** ${v.description || "No description provided."}
-* **Recommendation:** ${v.recommendation || "No recommendation provided."}
-`
-      )
-      .join("\n");
-  } else {
-    vulnerabilitiesMd = "\n*No vulnerabilities identified.*\n";
-  }
-
-  let gasMd = "";
-  if (Array.isArray(report.gasOptimizations) && report.gasOptimizations.length > 0) {
-    gasMd = report.gasOptimizations
-      .map(
-        (g: any) => `
-* **Suggestion:** ${g.description || "No description provided."}
-  * *Estimated Savings:* ${g.estimatedSavings || "N/A"}
-`
-      )
-      .join("\n");
-  } else {
-    gasMd = "\n*No gas optimizations identified.*\n";
-  }
-
-  return `# ⛓️ ChainGuard Smart Contract Security Audit Report
-
-## 📊 Overview
-* **Target:** \`${contractInput}\`
-* **Overall Security Score:** **${report.overallScore !== undefined ? report.overallScore : "N/A"}/100**
-* **Risk Level:** **${report.riskLevel || "Unknown"}**
-
-### Summary
-${report.summary || "No summary provided."}
-
----
-
-## 🔍 Vulnerabilities Detail
-${vulnerabilitiesMd}
-
----
-
-## ⛽ Gas Optimizations
-${gasMd}
-
----
-*Report generated autonomously by ChainGuard Security Agent on CROO CAP.*
-`;
-}
 
 
 // ── Environment ──────────────────────────────────────────────────────────────
@@ -194,22 +140,7 @@ export async function startProvider(): Promise<void> {
         console.log(`🤖 Running AI security audit…`);
         const report = await auditContract(sourceCode);
 
-        console.log(`📄 Generating Markdown report…`);
-        const markdownReport = generateMarkdownReport(report, input);
-        const reportFileName = `audit-${orderId}.md`;
-
-        console.log(`📤 Uploading report file to CROO storage…`);
-        const objectKey = await client.uploadFile(reportFileName, Buffer.from(markdownReport));
-        const downloadUrl = await client.getDownloadURL(objectKey);
-
-        console.log(`🔗 Hosted report URL: ${downloadUrl}`);
-
-        const finalReport = {
-          ...report,
-          reportUrl: downloadUrl,
-        };
-
-        reportJson = JSON.stringify(finalReport, null, 2);
+        reportJson = JSON.stringify(report, null, 2);
         proofHash = hashResult(reportJson);
 
         console.log(`📊 Audit complete — Score: ${report.overallScore}/100 | Risk: ${report.riskLevel}`);
