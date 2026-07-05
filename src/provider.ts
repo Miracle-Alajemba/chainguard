@@ -80,6 +80,17 @@ export async function startProvider(): Promise<void> {
         throw new Error("No input provided — expected a contract address, wallet address, or Solidity source code");
       }
 
+      // Try to parse the input as JSON in case it is wrapped (e.g. {"text": "..."})
+      let parsedInput = input;
+      try {
+        const parsed = JSON.parse(input);
+        if (parsed && typeof parsed === "object") {
+          parsedInput = (parsed.text || parsed.contractAddress || parsed.address || parsed.contract_address || parsed.requirements || input).toString().trim();
+        }
+      } catch {
+        // Not JSON formatted, use raw input
+      }
+
       // Read the service name from negotiation to determine which service was ordered
       const serviceId = negotiation.serviceId;
       const serviceNameFromMetadata = (() => {
@@ -91,35 +102,34 @@ export async function startProvider(): Promise<void> {
         }
       })();
 
-      const service = (negotiation as any).serviceName || 
-                      (negotiation as any).service_name || 
-                      (negotiation as any).service?.name || 
-                      serviceNameFromMetadata ||
-                      (serviceId === process.env.SERVICE_ID_TOKEN ? "Token Contract Analyzer" :
-                       serviceId === process.env.SERVICE_ID_WALLET ? "Wallet Security Scan" :
-                       serviceId === process.env.SERVICE_ID_GAS ? "Gas Optimizer" :
-                       "Smart Contract Audit");
+      const SERVICE_MAP: Record<string, string> = {
+        "585dbe8a-af77-4628-a8f3-3f7372ce07da": "Smart Contract Audit",
+        "7a4e743f-eb70-465b-862b-d2aadc182c93": "Token Contract Analyzer",
+        "d507471e-3048-4c57-ba87-576eb7444081": "Gas Optimizer",
+        "918a1ddc-f056-4ad2-b204-8ed26ebcc88d": "Wallet Security Scan",
+      };
+      const service = SERVICE_MAP[serviceId] || "Smart Contract Audit";
 
-      console.log(`🛎️  Routing paid order ${orderId} to service: "${service}"`);
+      console.log(`🛎️  Routing paid order ${orderId} to service: "${service}" with input: "${parsedInput.substring(0, 60)}${parsedInput.length > 60 ? '...' : ''}"`);
 
       let reportJson = "";
       let proofHash = "";
 
       if (service === "Token Contract Analyzer") {
-        console.log(`🤖 Running Token Contract Analysis for ${input}…`);
-        const report = await analyzeToken(input);
+        console.log(`🤖 Running Token Contract Analysis for ${parsedInput}…`);
+        const report = await analyzeToken(parsedInput);
         reportJson = JSON.stringify(report, null, 2);
         proofHash = hashResult(reportJson);
         console.log(`📊 Token analysis complete — Safety Score: ${report.safetyScore}/100 | Verdict: ${report.verdict}`);
       } else if (service === "Wallet Security Scan") {
-        console.log(`🕵️ Running Wallet Security Scan for ${input}…`);
-        const report = await scanWallet(input);
+        console.log(`🕵️ Running Wallet Security Scan for ${parsedInput}…`);
+        const report = await scanWallet(parsedInput);
         reportJson = JSON.stringify(report, null, 2);
         proofHash = hashResult(reportJson);
         console.log(`📊 Wallet scan complete — Trust Score: ${report.trustScore}/100 | Verdict: ${report.verdict}`);
       } else if (service === "Gas Optimizer") {
         console.log(`⛽ Running Solidity Gas Optimization for contract…`);
-        const report = await optimizeGas(input);
+        const report = await optimizeGas(parsedInput);
         reportJson = JSON.stringify(report, null, 2);
         proofHash = hashResult(reportJson);
         console.log(`📊 Gas optimization complete — Functions Analyzed: ${report.totalFunctionsAnalyzed} | Est. Savings: ${report.estimatedTotalSavings}`);
@@ -128,13 +138,13 @@ export async function startProvider(): Promise<void> {
         console.log(`🔍 Resolving source code…`);
         let sourceCode: string;
 
-        if (isContractAddress(input)) {
-          const { address, chain } = parseContractInput(input);
+        if (isContractAddress(parsedInput)) {
+          const { address, chain } = parseContractInput(parsedInput);
           console.log(`   → Fetching verified source for ${address} on chain ${chain}`);
           sourceCode = await fetchContractSource(address, chain);
         } else {
           console.log(`   → Using provided Solidity source code`);
-          sourceCode = input;
+          sourceCode = parsedInput;
         }
 
         console.log(`🤖 Running AI security audit…`);
