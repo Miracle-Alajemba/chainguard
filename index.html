@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ChainGuard — AI-Powered Smart Contract Security Auditor</title>
+  
+  <!-- SEO Meta Tags -->
+  <meta name="description" content="Instant, institutional-grade smart contract audits on Base. Powered by Claude AI and CROO CAP. Reports in under 30 seconds for just 0.10 USDC.">
+  <meta property="og:title" content="ChainGuard — AI Smart Contract Auditor">
+  <meta property="og:description" content="Instant, institutional-grade smart contract audits on Base. Powered by Claude AI and CROO CAP.">
+  
+  <!-- Typography & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=Space+Grotesk:wght@400;500;700&family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+  
+  <style>
+    /* ── DESIGN SYSTEM & VARIABLE TOKENS ── */
+    :root {
+      --bg-dark: #0A0A0F;
+      --bg-card: #12121A;
+      --bg-code: #08080C;
+      --primary: #00FFA3;
+      --primary-glow: rgba(0, 255, 163, 0.15);
+      --secondary: #00E5FF;
+      --text-main: #E2E8F0;
+      --text-muted: #94A3B8;
+      --text-dark: #64748B;
+      --border: rgba(255, 255, 255, 0.05);
+      --border-active: rgba(0, 255, 163, 0.3);
+      --danger: #FF4A4A;
+      --success: #00FFA3;
+      --warning: #FFB800;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Space Grotesk', sans-serif;
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    a {
+      text-decoration: none;
+      color: inherit;
+    }
+
+    /* ── LAYOUT UTILITIES ── */
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 2rem;
+    }
+
+    /* ── PREMIUM HEADER / NAV ── */
+    header {
+      border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background-color: rgba(10, 10, 15, 0.8);
+    }
+
+    .nav-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      height: 80px;
+    }
+
+    .logo-area {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 1.5rem;
+      font-weight: 700;
+      font-family: 'Space Grotesk', sans-serif;
+      letter-spacing: -0.5px;
+    }
+
+    .logo-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 8px;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 2rem;
+      align-items: center;
+    }
+
+    .nav-link {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      transition: color 0.2s;
+      font-weight: 500;
+    }
+
+    .nav-link:hover {
+      color: var(--primary);
+    }
+
+    /* ── BUTTONS ── */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.75rem 1.75rem;
+      border-radius: 9999px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      cursor: pointer;
+      border: none;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      color: #000;
+      box-shadow: 0 4px 20px var(--primary-glow);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(0, 255, 163, 0.35);
+    }
+
+    .btn-outline {
+      background: transparent;
+      color: var(--text-main);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+    }
+
+    .btn-outline:hover {
+      border-color: var(--primary);
+      box-shadow: 0 0 15px rgba(0, 255, 163, 0.1);
+      transform: translateY(-2px);
+    }
+
+    /* ── HERO SECTION ── */
+    .hero {
+      position: relative;
+      padding: 6rem 0 4rem 0;
+      text-align: center;
+    }
+
+    /* Glow Gradients */
+    .hero::before {
+      content: '';
+      position: absolute;
+      width: 400px;
+      height: 400px;
+      background: radial-gradient(circle, rgba(0, 255, 163, 0.08) 0%, transparent 70%);
+      top: 10%;
+      left: 15%;
+      pointer-events: none;
+    }
+
+    .hero::after {
+      content: '';
+      position: absolute;
+      width: 400px;
+      height: 400px;
+      background: radial-gradient(circle, rgba(0, 229, 255, 0.08) 0%, transparent 70%);
+      bottom: 10%;
+      right: 15%;
+      pointer-events: none;
+    }
+
+    .badge-network {
+      background: rgba(0, 255, 163, 0.08);
+      border: 1px solid var(--border-active);
+      color: var(--primary);
+      padding: 6px 16px;
+      border-radius: 9999px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 2rem;
+    }
+
+    .badge-dot {
+      width: 8px;
+      height: 8px;
+      background-color: var(--primary);
+      border-radius: 50%;
+      animation: pulse 1.8s infinite;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(0.9); opacity: 0.5; }
+      50% { transform: scale(1.1); opacity: 1; }
+      100% { transform: scale(0.9); opacity: 0.5; }
+    }
+
+    .hero h1 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 3.8rem;
+      font-weight: 800;
+      line-height: 1.1;
+      letter-spacing: -1.5px;
+      max-width: 900px;
+      margin: 0 auto 1.5rem auto;
+      background: linear-gradient(to right, #FFFFFF 40%, var(--text-muted) 80%, var(--primary) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero-subtitle {
+      font-size: 1.25rem;
+      color: var(--text-muted);
+      max-width: 650px;
+      margin: 0 auto 2.5rem auto;
+    }
+
+    .hero-ctas {
+      display: flex;
+      justify-content: center;
+      gap: 1.5rem;
+      margin-bottom: 4rem;
+    }
+
+    /* ── STATS SECTION ── */
+    .stats-bar {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2rem;
+      max-width: 800px;
+      margin: 0 auto;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      padding: 2.5rem 0;
+    }
+
+    .stat-item h3 {
+      font-size: 2.2rem;
+      font-weight: 700;
+      color: #FFF;
+      font-family: 'Outfit', sans-serif;
+    }
+
+    .stat-item p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-top: 4px;
+    }
+
+    /* ── PLAYGROUND (THE SCAN SIMULATOR) ── */
+    .playground-section {
+      padding: 6rem 0;
+      border-top: 1px solid var(--border);
+    }
+
+    .section-title {
+      text-align: center;
+      margin-bottom: 3.5rem;
+    }
+
+    .section-title h2 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+
+    .section-title p {
+      color: var(--text-muted);
+      font-size: 1.1rem;
+    }
+
+    .playground-container {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 2rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.5rem;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+      position: relative;
+    }
+
+    /* Code Window & Console Style */
+    .window-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 1rem;
+    }
+
+    .window-dots {
+      display: flex;
+      gap: 6px;
+    }
+
+    .dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+    }
+
+    .dot-red { background-color: #FF5F56; }
+    .dot-yellow { background-color: #FFBD2E; }
+    .dot-green { background-color: #27C93F; }
+
+    .window-title {
+      font-size: 0.85rem;
+      color: var(--text-dark);
+      font-family: 'Fira Code', monospace;
+    }
+
+    .editor-tabs {
+      display: flex;
+      gap: 8px;
+    }
+
+    .tab-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 6px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-family: 'Space Grotesk', sans-serif;
+      transition: all 0.2s;
+    }
+
+    .tab-btn.active {
+      border-color: var(--primary);
+      color: var(--primary);
+      background: rgba(0, 255, 163, 0.03);
+    }
+
+    .code-editor {
+      background-color: var(--bg-code);
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      padding: 1rem;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.85rem;
+      color: #A9B2C3;
+      height: 380px;
+      overflow-y: auto;
+      white-space: pre;
+    }
+
+    /* Output Console Styles */
+    .console-pane {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    .btn-scan {
+      background: var(--primary);
+      color: #000;
+      width: 100%;
+      padding: 1rem;
+      border-radius: 8px;
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700;
+      font-size: 1rem;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+      box-shadow: 0 4px 15px rgba(0, 255, 163, 0.1);
+      margin-bottom: 1.5rem;
+    }
+
+    .btn-scan:hover {
+      box-shadow: 0 6px 20px rgba(0, 255, 163, 0.25);
+      transform: translateY(-1px);
+    }
+
+    .console-output {
+      flex-grow: 1;
+      background: var(--bg-code);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1.25rem;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      height: 330px;
+      overflow-y: auto;
+      position: relative;
+    }
+
+    /* Report Formatting Styling */
+    .report-score-box {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .score-critical { color: var(--danger); border-color: rgba(255, 74, 74, 0.2); background: rgba(255, 74, 74, 0.03); }
+    .score-safe { color: var(--success); border-color: rgba(0, 255, 163, 0.2); background: rgba(0, 255, 163, 0.03); }
+
+    .vuln-item {
+      border-left: 3px solid var(--danger);
+      background: rgba(255, 255, 255, 0.02);
+      padding: 10px 14px;
+      margin-bottom: 12px;
+      border-radius: 0 6px 6px 0;
+    }
+
+    .vuln-item.low { border-left-color: var(--warning); }
+
+    .vuln-name { font-weight: 600; color: #FFF; margin-bottom: 4px; }
+    .vuln-desc { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 4px; }
+    .vuln-rec { font-size: 0.8rem; color: var(--primary); }
+
+    .loader {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      color: var(--primary);
+      gap: 15px;
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid rgba(0, 255, 163, 0.1);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* ── FEATURES SECTION ── */
+    .features {
+      padding: 6rem 0;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2rem;
+    }
+
+    .feature-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 2.5rem 2rem;
+      transition: all 0.3s;
+    }
+
+    .feature-card:hover {
+      border-color: var(--border-active);
+      transform: translateY(-5px);
+    }
+
+    .feature-icon {
+      font-size: 2rem;
+      margin-bottom: 1.5rem;
+      color: var(--primary);
+      display: inline-block;
+    }
+
+    .feature-card h3 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin-bottom: 0.75rem;
+      color: #FFF;
+    }
+
+    .feature-card p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+
+    /* ── HOW IT WORKS SECTION ── */
+    .how-it-works {
+      padding: 6rem 0;
+      border-top: 1px solid var(--border);
+      background: linear-gradient(180deg, var(--bg-dark) 0%, #0F0F17 100%);
+    }
+
+    .steps-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 3rem;
+      position: relative;
+    }
+
+    .step-card {
+      position: relative;
+      z-index: 2;
+    }
+
+    .step-num {
+      font-family: 'Outfit', sans-serif;
+      font-size: 3.5rem;
+      font-weight: 800;
+      background: linear-gradient(to bottom, var(--primary), transparent);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      line-height: 1;
+      margin-bottom: 1rem;
+    }
+
+    .step-card h3 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      color: #FFF;
+    }
+
+    .step-card p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+
+    /* ── CTA / FOOTER BANNER ── */
+    .cta-banner {
+      padding: 6rem 0;
+      text-align: center;
+      position: relative;
+    }
+
+    .cta-container {
+      background: linear-gradient(135deg, #12121A 0%, #1A1A26 100%);
+      border: 1px solid var(--border-active);
+      border-radius: 20px;
+      padding: 5rem 2rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cta-container h2 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 3rem;
+      font-weight: 800;
+      margin-bottom: 1rem;
+      color: #FFF;
+    }
+
+    .cta-container p {
+      color: var(--text-muted);
+      font-size: 1.15rem;
+      max-width: 600px;
+      margin: 0 auto 2.5rem auto;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      border-top: 1px solid var(--border);
+      padding: 3rem 0;
+      color: var(--text-dark);
+      font-size: 0.9rem;
+    }
+
+    .footer-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 968px) {
+      .hero h1 { font-size: 2.8rem; }
+      .playground-container { grid-template-columns: 1fr; }
+      .features-grid, .steps-grid { grid-template-columns: 1fr; gap: 2rem; }
+      .nav-links { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <header>
+    <div class="container nav-container">
+      <div class="logo-area">
+        <img class="logo-icon" src="./chainguard_logo.png" alt="ChainGuard Logo">
+        <span>ChainGuard</span>
+      </div>
+      <nav class="nav-links">
+        <a href="#playground" class="nav-link">Simulator</a>
+        <a href="#features" class="nav-link">Features</a>
+        <a href="#workflow" class="nav-link">Workflow</a>
+        <a href="https://agent.croo.network/agents/74775115-cf3e-4bb7-bc97-7662b35bb21d" target="_blank" class="btn btn-outline" style="padding: 0.5rem 1.25rem; font-size: 0.85rem;">Hire Agent</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- HERO SECTION -->
+  <section class="hero">
+    <div class="container">
+      <div class="badge-network">
+        <span class="badge-dot"></span> Deployed on Base Network
+      </div>
+      <h1>Institutional-Grade Smart Contract Audits in 30 Seconds</h1>
+      <p class="hero-subtitle">
+        Secure your code permissionlessly. Powered by Claude AI and the CROO Agent Protocol. Full vulnerability scoring and gas recommendations for just 0.10 USDC.
+      </p>
+      <div class="hero-ctas">
+        <a href="https://agent.croo.network/agents/74775115-cf3e-4bb7-bc97-7662b35bb21d" target="_blank" class="btn btn-primary">Hire Auditor (0.10 USDC)</a>
+        <a href="#playground" class="btn btn-outline">Try Free Simulator</a>
+      </div>
+      
+      <!-- Stats Banner -->
+      <div class="stats-bar">
+        <div class="stat-item">
+          <h3>&lt; 30s</h3>
+          <p>Delivery Speed</p>
+        </div>
+        <div class="stat-item">
+          <h3>0.10 USDC</h3>
+          <p>Flat Scan Cost</p>
+        </div>
+        <div class="stat-item">
+          <h3>100%</h3>
+          <p>On-Chain Verified</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SIMULATOR PLAYGROUND -->
+  <section id="playground" class="playground-section">
+    <div class="container">
+      <div class="section-title">
+        <h2>Interactive Playground</h2>
+        <p>Choose a smart contract template and run a simulated security audit report instantly</p>
+      </div>
+
+      <div class="playground-container">
+        <!-- Left Pane: Code Editor -->
+        <div>
+          <div class="window-header">
+            <div class="window-dots">
+              <span class="dot dot-red"></span>
+              <span class="dot dot-yellow"></span>
+              <span class="dot dot-green"></span>
+            </div>
+            <div class="editor-tabs">
+              <button class="tab-btn active" onclick="switchContract('vulnerable')">VulnerableBank.sol</button>
+              <button class="tab-btn" onclick="switchContract('secure')">SecureBank.sol</button>
+            </div>
+            <span class="window-title">Solidity ^0.8.20</span>
+          </div>
+          <div id="codeView" class="code-editor">Loading code template...</div>
+        </div>
+
+        <!-- Right Pane: Live Console/Output -->
+        <div class="console-pane">
+          <button class="btn-scan" onclick="runSimulatedAudit()">⚡ Run Demo Audit Scan</button>
+          
+          <div class="console-output">
+            <!-- Simulated Loading Indicator -->
+            <div id="loader" class="loader">
+              <div class="spinner"></div>
+              <span id="loadingText" style="font-size: 0.8rem;">Initializing environment...</span>
+            </div>
+            
+            <!-- Welcome View -->
+            <div id="consoleWelcome" style="height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; color: var(--text-dark);">
+              <span style="font-size: 2.5rem; margin-bottom: 1rem;">🤖</span>
+              <p style="font-size: 0.9rem;">Click the button above to run our AI security scanning auditor simulator on the template code.</p>
+            </div>
+
+            <!-- Audit Report Output View (Populated dynamically) -->
+            <div id="auditReport" style="display: none;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- KEY FEATURES -->
+  <section id="features" class="features">
+    <div class="container">
+      <div class="section-title">
+        <h2>Built for Web3 Builders</h2>
+        <p>Why developers, DAOs, and autonomous agents choose ChainGuard</p>
+      </div>
+
+      <div class="features-grid">
+        <!-- Card 1 -->
+        <div class="feature-card">
+          <span class="feature-icon">⚡</span>
+          <h3>Lightning Fast</h3>
+          <p>Traditional human audits take weeks. ChainGuard leverages high-speed language intelligence to scan, analyze, and deliver a comprehensive report in under 30 seconds.</p>
+        </div>
+        <!-- Card 2 -->
+        <div class="feature-card">
+          <span class="feature-icon">🔍</span>
+          <h3>Logic-Driven Scans</h3>
+          <p>Unlike basic syntax tools, our Claude-powered core understands the developer's execution logic, identifying reentrancy, access control bypasses, and structural flaws.</p>
+        </div>
+        <!-- Card 3 -->
+        <div class="feature-card">
+          <span class="feature-icon">⛽</span>
+          <h3>Gas Efficiency Tips</h3>
+          <p>Our auditor provides actionable recommendations to optimize code storage access, variables, and math operators, lowering deploy fees for you and usage fees for users.</p>
+        </div>
+        <!-- Card 4 -->
+        <div class="feature-card">
+          <span class="feature-icon">🔐</span>
+          <h3>Cryptographic Proofs</h3>
+          <p>Every single report receives a SHA-256 hash. The hash serves as permanent, verifiable cryptographic proof of delivery, anchored natively to the Base network.</p>
+        </div>
+        <!-- Card 5 -->
+        <div class="feature-card">
+          <span class="feature-icon">🤖</span>
+          <h3>Agent Composable</h3>
+          <p>Fully compliant with the CROO CAP SDK. Any autonomous coding agent or treasury manager can programmatically hire ChainGuard with zero human intervention.</p>
+        </div>
+        <!-- Card 6 -->
+        <div class="feature-card">
+          <span class="feature-icon">💸</span>
+          <h3>Democratic Pricing</h3>
+          <p>No monthly retainers, no contract negotiations. Secure audits are priced at a flat 0.10 USDC per request, making continuous testing affordable for everyone.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS / WORKFLOW -->
+  <section id="workflow" class="how-it-works">
+    <div class="container">
+      <div class="section-title">
+        <h2>How It Works</h2>
+        <p>From request to on-chain verification in 3 simple steps</p>
+      </div>
+
+      <div class="steps-grid">
+        <div class="step-card">
+          <div class="step-num">01</div>
+          <h3>Initiate Negotiation</h3>
+          <p>A requester submits a Solidity file or contract address and locks in the 0.10 USDC fee on the Base network.</p>
+        </div>
+        <div class="step-card">
+          <div class="step-num">02</div>
+          <h3>AI Security Scan</h3>
+          <p>ChainGuard's node fetches the source code (via Etherscan if verified) and runs deep security analysis using the Claude AI audit engine.</p>
+        </div>
+        <div class="step-card">
+          <div class="step-num">03</div>
+          <h3>Proof & Delivery</h3>
+          <p>A SHA-256 proof hash is generated, the report is uploaded, and the structured results are delivered back to the requester via CAP.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA / FOOTER BANNER -->
+  <section class="cta-banner">
+    <div class="container">
+      <div class="cta-container">
+        <h2>Secure Your Code Instantly</h2>
+        <p>Hire the ChainGuard auditor on the CROO Agent Store and deploy to mainnet with absolute confidence.</p>
+        <a href="https://agent.croo.network/agents/74775115-cf3e-4bb7-bc97-7662b35bb21d" target="_blank" class="btn btn-primary" style="font-size: 1.1rem; padding: 1rem 2.5rem;">Hire ChainGuard Agent</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="container footer-content">
+      <p>&copy; 2026 ChainGuard. Operating autonomously on the CROO CAP Protocol.</p>
+      <p>Built with ❤️ for the CROO Network Hackathon.</p>
+    </div>
+  </footer>
+
+  <!-- SCRIPTING (PLAYGROUND FUNCTIONALITY) -->
+  <script>
+    // Templates
+    const templates = {
+      vulnerable: `// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+contract VulnerableBank {
+    mapping(address => uint256) public balances;
+
+    function deposit() public payable {
+        balances[msg.sender] += msg.value;
+    }
+
+    // ❌ CRITICAL VULNERABILITY: Reentrancy
+    function withdraw() public {
+        uint256 bal = balances[msg.sender];
+        require(bal > 0);
+        
+        (bool sent, ) = msg.sender.call{value: bal}("");
+        require(sent, "Failed to send Ether");
+        
+        balances[msg.sender] = 0; // State update after external call!
+    }
+
+    // ❌ VULNERABILITY: Unprotected emergency withdrawal
+    function emergencyWithdraw() public {
+        uint256 contractBalance = address(this).balance;
+        (bool success, ) = msg.sender.call{value: contractBalance}("");
+        require(success);
+    }
+}`,
+      secure: `// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.20;
+
+import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+
+contract SecureBank is ReentrancyGuard {
+    mapping(address => uint256) public balances;
+    address public owner;
+
+    constructor() {
+        owner = msg.sender;
+    }
+
+    modifier onlyOwner() {
+        require(msg.sender == owner, "Not owner");
+        _;
+    }
+
+    function deposit() public payable {
+        balances[msg.sender] += msg.value;
+    }
+
+    // ✅ FIXED: Checks-Effects-Interactions and ReentrancyGuard
+    function withdraw() public nonReentrant {
+        uint256 bal = balances[msg.sender];
+        require(bal > 0, "Insufficent balance");
+        
+        balances[msg.sender] = 0; // State updated BEFORE transfer
+        
+        (bool sent, ) = msg.sender.call{value: bal}("");
+        require(sent, "Failed to send Ether");
+    }
+
+    // ✅ FIXED: Restricted administrative function
+    function emergencyWithdraw() public onlyOwner nonReentrant {
+        uint256 contractBalance = address(this).balance;
+        (bool success, ) = owner.call{value: contractBalance}("");
+        require(success, "Transfer failed");
+    }
+}`
+    };
+
+    let selectedTemplate = 'vulnerable';
+
+    function switchContract(templateKey) {
+      selectedTemplate = templateKey;
+      document.getElementById('codeView').innerText = templates[templateKey];
+      
+      // Update tab UI
+      const tabs = document.querySelectorAll('.tab-btn');
+      tabs.forEach(tab => tab.classList.remove('active'));
+      event.target.classList.add('active');
+
+      // Reset Output
+      document.getElementById('consoleWelcome').style.display = 'flex';
+      document.getElementById('auditReport').style.display = 'none';
+      document.getElementById('loader').style.display = 'none';
+    }
+
+    // Initialize with VulnerableBank
+    document.getElementById('codeView').innerText = templates.vulnerable;
+
+    // Simulation Loading Script
+    function runSimulatedAudit() {
+      const welcome = document.getElementById('consoleWelcome');
+      const loader = document.getElementById('loader');
+      const report = document.getElementById('auditReport');
+      const loadText = document.getElementById('loadingText');
+
+      welcome.style.display = 'none';
+      report.style.display = 'none';
+      loader.style.display = 'flex';
+
+      const steps = [
+        "Connecting to CROO WebSocket...",
+        "Fetching Solidity AST...",
+        "Running Claude AI Security Auditor...",
+        "Checking Reentrancy Vectors...",
+        "Analyzing Access Control hierarchies...",
+        "Calculating gas optimizations...",
+        "Generating cryptographic proof...",
+        "Audit completed successfully."
+      ];
+
+      let currentStep = 0;
+      const interval = setInterval(() => {
+        if (currentStep < steps.length) {
+          loadText.innerText = steps[currentStep];
+          currentStep++;
+        } else {
+          clearInterval(interval);
+          loader.style.display = 'none';
+          renderReport();
+        }
+      }, 500);
+    }
+
+    // Render report details based on selection
+    function renderReport() {
+      const report = document.getElementById('auditReport');
+      report.style.display = 'block';
+
+      if (selectedTemplate === 'vulnerable') {
+        report.innerHTML = `
+          <div class="report-score-box score-critical">
+            <div>
+              <div style="font-weight:700; font-size:1.1rem;">Risk Level: CRITICAL</div>
+              <div style="font-size:0.75rem; color:var(--text-muted);">Overall Security Score</div>
+            </div>
+            <div style="font-size:2.2rem; font-weight:800; font-family:'Outfit';">15/100</div>
+          </div>
+          
+          <div class="vuln-item">
+            <div class="vuln-name">🚨 Reentrancy Vulnerability (Critical)</div>
+            <div class="vuln-desc">State update balances[msg.sender] = 0 happens after external call. An attacker contract could repeatedly invoke withdraw() before balance resets.</div>
+            <div class="vuln-rec">Fix: Update state variable before calling msg.sender.call, or use ReentrancyGuard.</div>
+          </div>
+
+          <div class="vuln-item">
+            <div class="vuln-name">🚨 Unprotected Administrative Withdrawal (High)</div>
+            <div class="vuln-desc">emergencyWithdraw() can be invoked by anyone, permitting drains of the entire contract's ether balances.</div>
+            <div class="vuln-rec">Fix: Apply a modifier restricting execution (e.g. onlyOwner).</div>
+          </div>
+
+          <div style="margin-top:15px; font-size:0.75rem; color:var(--text-dark);">
+            🔐 Proof Hash: 0xa1d5f8c...4fe28ab
+          </div>
+        `;
+      } else {
+        report.innerHTML = `
+          <div class="report-score-box score-safe">
+            <div>
+              <div style="font-weight:700; font-size:1.1rem;">Risk Level: SAFE</div>
+              <div style="font-size:0.75rem; color:var(--text-muted);">Overall Security Score</div>
+            </div>
+            <div style="font-size:2.2rem; font-weight:800; font-family:'Outfit';">95/100</div>
+          </div>
+          
+          <div class="vuln-item low" style="border-left-color: var(--success);">
+            <div class="vuln-name">✅ Checks-Effects-Interactions (Safe)</div>
+            <div class="vuln-desc">All user withdrawals reset balances before executing transfer calls. Reentrancy is fully prevented.</div>
+          </div>
+
+          <div class="vuln-item low" style="border-left-color: var(--success);">
+            <div class="vuln-name">✅ Restricted Access Control (Safe)</div>
+            <div class="vuln-desc">emergencyWithdraw() is properly restricted via the onlyOwner modifier.</div>
+          </div>
+
+          <div style="margin-top:15px; font-size:0.75rem; color:var(--text-dark);">
+            🔐 Proof Hash: 0x93fe62c...31ab2f0
+          </div>
+        `;
+      }
+    }
+  </script>
+
+</body>
+</html>
