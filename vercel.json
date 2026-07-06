@@ -1,0 +1,4 @@
+{
+  "buildCommand": "mkdir -p public && cp index.html chainguard_logo.png public/",
+  "outputDirectory": "public"
+}
